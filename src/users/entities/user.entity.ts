@@ -1,4 +1,4 @@
-import { Document } from 'mongoose';
+import { Document, now } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { removePasword, remove_V } from 'src/utilities/functions';
 
@@ -20,6 +20,27 @@ export class User extends Document {
   password: string;
 
   @Prop()
+  githubLink: string;
+
+  @Prop()
+  linkedInLink: string;
+
+  @Prop()
+  bio: string;
+
+  @Prop()
+  instagramLink: string;
+
+  @Prop()
+  facebookLink: string;
+
+  @Prop()
+  twitterLink: string;
+
+  @Prop()
+  favoriteTechStack: string[];
+
+  @Prop()
   isBlocked: boolean;
 
   @Prop()
@@ -28,10 +49,14 @@ export class User extends Document {
   @Prop()
   mobileNumber: number;
 
-  @Prop()
+  @Prop({default:now()})
   createdAt: Date;
+  
   @Prop()
   updatedAt: Date;
+  
+  @Prop()
+  refreshToken: string;
 }
 
-export const UserSchema = SchemaFactory.createForClass(User)
+export const UserSchema = SchemaFactory.createForClass(User);

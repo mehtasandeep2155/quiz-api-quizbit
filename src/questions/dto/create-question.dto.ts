@@ -14,6 +14,10 @@ export class CreateQuestionDto {
 
   @ApiProperty({ type: String, required: true })
   @IsNotEmpty()
+  questionType: string;
+
+  @ApiProperty({ type: String, required: true })
+  @IsNotEmpty()
   difficultyLevel: string;
 
   @ApiProperty({ type: [Option] })
@@ -25,4 +29,5 @@ export class CreateQuestionDto {
   @ApiProperty({ type: Array })
   @IsNotEmpty()
   correctAnswers: string[];
+
 }

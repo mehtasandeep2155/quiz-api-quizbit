@@ -5,6 +5,7 @@ import { Module } from '@nestjs/common';
 import { AdminModule } from 'src/admin/admin.module';
 import { AdminAuthService } from './admin-auth.service';
 import { AdminAuthController } from './admin-auth.controller';
+import { tokenSecret } from 'src/config';
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { AdminAuthController } from './admin-auth.controller';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async () => ({
-        secret: `${process.env.JWT_KEY}`
+        secret: tokenSecret()
       }),
       inject: [ConfigService]
     })

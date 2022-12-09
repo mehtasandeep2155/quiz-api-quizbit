@@ -32,6 +32,8 @@ export class BaseService<T> {
     const existingUser = await this.model.findByIdAndUpdate(id, updateDto, {
       new: true
     });
+
+    await existingUser.save();
     if (!existingUser) {
       throw new NotFoundException(`${id} not found`);
     }
@@ -68,5 +70,33 @@ export class BaseService<T> {
 */
   async remove(id: string) {
     return await this.model.findByIdAndDelete(id);
+  }
+
+  /**
+   *
+   * @param ids
+   * @param keys
+   * @returns updated objects based on ids
+   */
+  async updateMany(ids, keys) {
+    return await this.model.updateMany(
+      { _id: { $in: ids } },
+      { $set: keys },
+      { multi: true },
+      function (err) {
+        if (err) {
+          return false;
+        }
+      }
+    );
+  }
+
+  /**
+   *
+   * @param keys
+   * @returns add multiple records
+   */
+  async insertMany(keys) {
+    return await this.model.insertMany(keys);
   }
 }

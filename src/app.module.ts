@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
+import { MailerModule } from '@nestjs-modules/mailer';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { QuestionsModule } from './questions/questions.module';
@@ -12,13 +13,16 @@ import { AdminAuthModule } from './admin-auth/admin-auth.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { UserQuizzesModule } from './user-quizzes/user-quizzes.module';
 import { UserPerformanceModule } from './user-performance/user-performance.module';
+import { PublicQuestionModule } from './public-questions/public-question.module';
+import { mailerConfig,db } from './config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       envFilePath: '.env'
     }),
-    MongooseModule.forRoot(process.env.MONGOOSE_URL),
+    MongooseModule.forRoot(db()),
+    MailerModule.forRoot(mailerConfig),
     AuthModule,
     UsersModule,
     AdminAuthModule,
@@ -28,6 +32,7 @@ import { UserPerformanceModule } from './user-performance/user-performance.modul
     QuizzesModule,
     UserQuizzesModule,
     UserPerformanceModule,
+    PublicQuestionModule,
   ],
   controllers: [AppController],
   providers: [AppService]

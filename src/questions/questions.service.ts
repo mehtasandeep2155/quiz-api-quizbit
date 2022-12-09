@@ -17,8 +17,6 @@ export class QuestionsService extends BaseService<QuestionDocument> {
     category: string,
     difficultyLevel: string
   ): Promise<Question[]> {
-    return await this.questionModel
-      .find({ category: category, difficultyLevel: difficultyLevel })
-      .exec();
+    return await this.questionModel.find({ category, difficultyLevel });
   }
 }

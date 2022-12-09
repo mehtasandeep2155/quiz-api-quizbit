@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { AdminService } from 'src/admin/admin.service';
 import { ERROR_MESSAGE, Role } from 'src/utilities/enums';
+import { comparePassword } from 'src/utilities/functions';
 
 @Injectable()
 export class AdminAuthService {
@@ -16,7 +17,7 @@ export class AdminAuthService {
     if (!admin) {
       throw new UnauthorizedException(ERROR_MESSAGE.LOGIN_FAILED);
     }
-    if (password !== admin.password) {
+    if (!comparePassword(password, admin.password)) {
       throw new UnauthorizedException(ERROR_MESSAGE.WRONG_PASSWORD);
     }
     return {

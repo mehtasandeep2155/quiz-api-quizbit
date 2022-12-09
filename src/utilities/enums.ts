@@ -32,6 +32,10 @@ export enum OPERATION_TYPE {
   QUESTION_BY_ID = 'GET QUESTION BY ID',
   UPDATE_QUESTION = 'UPDATE QUESTION',
   DELETE_QUESTION = 'DELETE QUESTION',
+  REVIEW_QUESTIONS = 'REVIEW QUESTIONS',
+  MIGRATE_QUESTIONS = 'MIGRATE QUESTIONS',
+  FIND_ALL_QUESTIONS = 'FIND ALL QUESTIONS',
+  REVIEW_QUESTION = 'REVIEW QUESTION',
   ADMIN_LOG_IN = 'ADMIN LOG IN',
   ADMIN_BY_ID = 'GET ADMIN BY ID',
   UPDATE_ADMIN = 'UPDATE ADMIN DETAILS'
@@ -39,14 +43,27 @@ export enum OPERATION_TYPE {
 
 export enum API_TAG {
   ADMIN_AUTH = 'Admin Authentication',
-  ADMIN = 'Admin Operations'
+  ADMIN = 'Admin Operations',
+  PUBLIC_QUESTIONS = 'Public Questions',
+  USERS_CRUD = 'Users CRUD',
+  USER_AUTHENTICATION = 'User Authentication',
+  ADMIN_DASHBOARD = 'Admin Dashboard'
+}
+
+export enum CONTROLLER_DEF {
+  PUBLIC_QUESTIONS = 'public-questions',
+  USERS_SERVICES = 'users',
+  ADMIN_AUTH = 'admin-auth',
+  AUTH_SERVICES = 'auth',
+  ADMIN_DASHBOARD = 'admin/dashboard'
 }
 
 export enum ERROR_MESSAGE {
   LOGIN_FAILED = 'Login failed',
   WRONG_PASSWORD = 'Wrong Password',
   USER_NOT_FOUND = 'No user found of this email',
-  USER_BLOCKED="Your account has been blocked please contact to admin"
+  USER_BLOCKED = 'Your account has been blocked please contact to admin',
+  INVALID_TOKEN = 'Invalid user/token'
 }
 
 export enum QUIZ_TYPE {
@@ -64,4 +81,9 @@ export enum VARIABLES {
   EMAIL = 'email',
   QUESTIONS = 'questions',
   USER_DETAILS = 'userDetails'
+}
+
+export enum EMAIL_SUBJECT {
+  QUIZ = 'Quiz Assignment',
+  RESET_PASSWORD = 'Reset your password'
 }

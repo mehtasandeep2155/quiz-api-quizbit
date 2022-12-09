@@ -3,10 +3,10 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RoleGuard } from 'src/auth/role.guard';
 import { QuizzesService } from 'src/quizzes/quizzes.service';
-import { Role } from 'src/utilities/enums';
+import { API_TAG, CONTROLLER_DEF, Role } from 'src/utilities/enums';
 
-@Controller('admin/dashboard')
-@ApiTags('Admin Dashboard')
+@Controller(CONTROLLER_DEF.ADMIN_DASHBOARD)
+@ApiTags(API_TAG.ADMIN_DASHBOARD)
 export class DashboardController {
   constructor(private readonly quizzesService: QuizzesService) {}
 

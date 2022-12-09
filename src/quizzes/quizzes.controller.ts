@@ -24,6 +24,7 @@ import { QuestionsService } from 'src/questions/questions.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RoleGuard } from 'src/auth/role.guard';
 import {
+  EMAIL_SUBJECT,
   OPERATION_TYPE,
   QUIZ_TYPE,
   RESPONSE_MESSAGE,
@@ -37,6 +38,8 @@ import { Time } from './entities/quiz.entity';
 import { checkCorrectAnswer, makeQuestions } from 'src/utilities/functions';
 import { UserPerformanceService } from 'src/user-performance/user-performance.service';
 import { shuffle } from 'src/utilities/shuffleArray';
+import { MailerService } from '@nestjs-modules/mailer';
+import { quizEmailTemplates } from 'src/utilities/email-templates';
 
 @Controller('quizzes')
 @ApiTags('Quiz CRUD')
@@ -45,8 +48,9 @@ export class QuizzesController {
     private readonly quizzesService: QuizzesService,
     private readonly questionsService: QuestionsService,
     private readonly userQuizzesService: UserQuizzesService,
-    private readonly userPerformanceService: UserPerformanceService
-  ) {}
+    private readonly userPerformanceService: UserPerformanceService,
+    private readonly mailerService: MailerService
+  ) { }
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -83,6 +87,13 @@ export class QuizzesController {
         endedAt: null
       });
       const newQuiz = await this.quizzesService.create(body);
+      if (body.assignedByAdmin) {
+        this.mailerService.sendMail({
+          to: `${body.email}`, 
+          subject: EMAIL_SUBJECT.QUIZ,
+          html: quizEmailTemplates(newQuiz._id),
+        });
+      }
       const createUserQuizAnswers = {
         quizId: newQuiz._id,
         user: newQuiz.email,

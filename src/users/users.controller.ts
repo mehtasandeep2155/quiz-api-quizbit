@@ -9,22 +9,18 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
-  Response
+  Response,
+  HttpException
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { ApiTags } from '@nestjs/swagger';
 import {
-  ApiBearerAuth,
-  ApiInternalServerErrorResponse,
-  ApiNotFoundResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags,
-  ApiUnauthorizedResponse
-} from '@nestjs/swagger';
-import {
+  API_TAG,
   AUTH,
+  CONTROLLER_DEF,
+  ERROR_MESSAGE,
   OPERATION_TYPE,
   QUIZ_TYPE,
-  RESPONSE_MESSAGE,
   Role
 } from 'src/utilities/enums';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -34,43 +30,57 @@ import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { hashPassword } from 'src/utilities/functions';
-
-@Controller('users')
-@ApiTags('Users CRUD')
+import { ApiDescription } from 'src/decorators/api-description.decorator';
+import { ResetNewPasswordDto, ResetPasswordDto } from './dto/reset-password.dto';
+@Controller(CONTROLLER_DEF.USERS_SERVICES)
+@ApiTags(API_TAG.USERS_CRUD)
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
-    private readonly quizzesService: QuizzesService
-  ) {}
+    private readonly quizzesService: QuizzesService,
+    private jwtService: JwtService,
+  ) { }
 
   @Post('/register')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ description: OPERATION_TYPE.NEW_USER })
-  @ApiOkResponse({ description: RESPONSE_MESSAGE.SUCCESS })
-  @ApiNotFoundResponse({ description: RESPONSE_MESSAGE.NOT_FOUND })
-  @ApiUnauthorizedResponse({ description: RESPONSE_MESSAGE.UNAUTHORIZED_USER })
-  @ApiInternalServerErrorResponse({
-    description: RESPONSE_MESSAGE.SERVER_ERROR
-  })
+  @ApiDescription(OPERATION_TYPE.NEW_USER)
   async create(@Body() createUserDto: CreateUserDto, @Response() res) {
-    const { token } = await this.usersService.create(createUserDto);
+    const { token,refreshToken } = await this.usersService.create(createUserDto);
     return res.header(AUTH.AUTHORIZATION, token).send({
       success: true,
-      token
+      token,
+      refreshToken
     });
   }
+  @Post('/forgot-password')
+  async sentResetPasswordLink(@Body() resetPassword: ResetPasswordDto) {
+    return await this.usersService.sentPasswordLink(resetPassword)
+  }
+
+  @Post('/set-password/:id/:token')
+  async setNewPassword(@Param('id') id: string, @Param('token') token: string, @Body() updatePasswordDto: ResetNewPasswordDto) {
+    const user = await this.usersService.findOne(id)
+    const secretKey = user.password + "_" + user.createdAt
+    try {
+      const userVerified: any = this.jwtService.verify(token, { secret: secretKey })
+      if (userVerified.id === id) {
+        const hashedPassword = hashPassword(updatePasswordDto.password);
+        Object.assign(updatePasswordDto, {
+          password: hashedPassword
+        })
+        return await this.usersService.update(id, { password: updatePasswordDto.password })
+      }
+    } catch (error) {
+      throw new HttpException(
+        ERROR_MESSAGE.INVALID_TOKEN,
+        HttpStatus.BAD_REQUEST
+      ); 
+      }
+    } 
+  
 
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @Get('/pending-quiz/:email')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ description: OPERATION_TYPE.GET_USER_PENDING_QUIZ })
-  @ApiOkResponse({ description: RESPONSE_MESSAGE.SUCCESS })
-  @ApiNotFoundResponse({ description: RESPONSE_MESSAGE.NOT_FOUND })
-  @ApiUnauthorizedResponse({ description: RESPONSE_MESSAGE.UNAUTHORIZED_USER })
-  @ApiInternalServerErrorResponse({
-    description: RESPONSE_MESSAGE.SERVER_ERROR
-  })
+  @ApiDescription(OPERATION_TYPE.GET_USER_PENDING_QUIZ)
   async findUserPendingQuiz(@Param('email') email: string) {
     return await this.quizzesService.findQuizByUserEmail(
       email,
@@ -79,16 +89,8 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @Get('/completed-quiz/:email')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ description: OPERATION_TYPE.GET_USER_COMPLETED_QUIZ })
-  @ApiOkResponse({ description: RESPONSE_MESSAGE.SUCCESS })
-  @ApiNotFoundResponse({ description: RESPONSE_MESSAGE.NOT_FOUND })
-  @ApiUnauthorizedResponse({ description: RESPONSE_MESSAGE.UNAUTHORIZED_USER })
-  @ApiInternalServerErrorResponse({
-    description: RESPONSE_MESSAGE.SERVER_ERROR
-  })
+  @ApiDescription(OPERATION_TYPE.GET_USER_COMPLETED_QUIZ)
   async findUserCompletedQuiz(@Param('email') email: string) {
     return await this.quizzesService.findQuizByUserEmail(
       email,
@@ -97,61 +99,30 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard, new RoleGuard(Role.Admin))
-  @ApiBearerAuth()
   @Get('/user-list')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ description: OPERATION_TYPE.ALL_USERS })
-  @ApiOkResponse({ description: RESPONSE_MESSAGE.SUCCESS })
-  @ApiNotFoundResponse({ description: RESPONSE_MESSAGE.NOT_FOUND })
-  @ApiUnauthorizedResponse({ description: RESPONSE_MESSAGE.UNAUTHORIZED_USER })
-  @ApiInternalServerErrorResponse({
-    description: RESPONSE_MESSAGE.SERVER_ERROR
-  })
+  @ApiDescription(OPERATION_TYPE.ALL_USERS)
   findAll() {
     return this.usersService.findAll();
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @Get(':id')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ description: OPERATION_TYPE.USER_BY_ID })
-  @ApiOkResponse({ description: RESPONSE_MESSAGE.SUCCESS })
-  @ApiNotFoundResponse({ description: RESPONSE_MESSAGE.NOT_FOUND })
-  @ApiUnauthorizedResponse({ description: RESPONSE_MESSAGE.UNAUTHORIZED_USER })
-  @ApiInternalServerErrorResponse({
-    description: RESPONSE_MESSAGE.SERVER_ERROR
-  })
+  @ApiDescription(OPERATION_TYPE.USER_BY_ID)
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);
   }
 
   @UseGuards(JwtAuthGuard, new RoleGuard(Role.Admin))
-  @ApiBearerAuth()
   @Patch('/block-unblock/:id')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ description: OPERATION_TYPE.UPDATE_USER })
-  @ApiOkResponse({ description: RESPONSE_MESSAGE.SUCCESS })
-  @ApiNotFoundResponse({ description: RESPONSE_MESSAGE.NOT_FOUND })
-  @ApiUnauthorizedResponse({ description: RESPONSE_MESSAGE.UNAUTHORIZED_USER })
-  @ApiInternalServerErrorResponse({
-    description: RESPONSE_MESSAGE.SERVER_ERROR
-  })
+  @ApiDescription(OPERATION_TYPE.UPDATE_USER)
   async blockUnblockUser(@Param('id') id: string, @Body() updateUserDto: any) {
     return await this.usersService.update(id, updateUserDto);
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @Patch('/update/:id')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ description: OPERATION_TYPE.UPDATE_USER })
-  @ApiOkResponse({ description: RESPONSE_MESSAGE.SUCCESS })
-  @ApiNotFoundResponse({ description: RESPONSE_MESSAGE.NOT_FOUND })
-  @ApiUnauthorizedResponse({ description: RESPONSE_MESSAGE.UNAUTHORIZED_USER })
-  @ApiInternalServerErrorResponse({
-    description: RESPONSE_MESSAGE.SERVER_ERROR
-  })
+  @ApiDescription(OPERATION_TYPE.UPDATE_USER)
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     const { password } = updateUserDto;
     if (password) {
@@ -162,17 +133,14 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @Delete('/delete/:id')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ description: OPERATION_TYPE.DELETE_USER })
-  @ApiOkResponse({ description: RESPONSE_MESSAGE.SUCCESS })
-  @ApiNotFoundResponse({ description: RESPONSE_MESSAGE.NOT_FOUND })
-  @ApiUnauthorizedResponse({ description: RESPONSE_MESSAGE.UNAUTHORIZED_USER })
-  @ApiInternalServerErrorResponse({
-    description: RESPONSE_MESSAGE.SERVER_ERROR
-  })
+  @ApiDescription(OPERATION_TYPE.DELETE_USER)
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
+  }
+
+  @Get('/logout/:id')
+  logout(@Param('id') id: string){
+    return this.usersService.updateUserRefreshToken(id,null)
   }
 }

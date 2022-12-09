@@ -16,14 +16,17 @@ export class Option {
   label: string;
 }
 
-export type QuestionDocument = Question & Document;
+export type PublicQuestionDocument = PublicQuestion & Document;
 @Schema({
   toJSON: {
     virtuals: true,
     transform: remove_V
   }
 })
-export class Question extends Document {
+export class PublicQuestion extends Document {
+  @Prop()
+  name: string;
+
   @Prop()
   question: string;
 
@@ -44,6 +47,5 @@ export class Question extends Document {
 
   @Prop()
   isReviewed: boolean;
-
 }
-export const QuestionSchema = SchemaFactory.createForClass(Question);
+export const PublicQuestionSchema = SchemaFactory.createForClass(PublicQuestion);

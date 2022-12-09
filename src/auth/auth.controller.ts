@@ -2,41 +2,45 @@ import {
   BadRequestException,
   Body,
   Controller,
-  HttpCode,
-  HttpStatus,
   Post,
   Response
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import { ApiDescription } from 'src/decorators/api-description.decorator';
 import {
-  ApiInternalServerErrorResponse,
-  ApiNotFoundResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags
-} from '@nestjs/swagger';
-import { AUTH, OPERATION_TYPE, RESPONSE_MESSAGE } from 'src/utilities/enums';
+  API_TAG,
+  AUTH,
+  CONTROLLER_DEF,
+  OPERATION_TYPE
+} from 'src/utilities/enums';
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
+import { RefreshTokenDto } from './dto/refreshToken.dto';
 
-@Controller('auth')
-@ApiTags('User Authentication')
+@Controller(CONTROLLER_DEF.AUTH_SERVICES)
+@ApiTags(API_TAG.USER_AUTHENTICATION)
 export class AuthController {
   constructor(private authService: AuthService) {}
   @Post('/login')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ description: OPERATION_TYPE.LOG_IN })
-  @ApiOkResponse({ description: RESPONSE_MESSAGE.SUCCESS })
-  @ApiNotFoundResponse({ description: RESPONSE_MESSAGE.NOT_FOUND })
-  @ApiInternalServerErrorResponse({
-    description: RESPONSE_MESSAGE.SERVER_ERROR
-  })
+  @ApiDescription(OPERATION_TYPE.LOG_IN)
   async login(@Body() { email, password }: AuthDto, @Response() res) {
     try {
-      const { token } = await this.authService.login(email, password);
+      const { token,refreshToken } = await this.authService.login(email, password);
       return res.header(AUTH.AUTHORIZATION, token).send({
         success: true,
-        token
+        token,
+        refreshToken
       });
+    } catch (err) {
+      throw new BadRequestException({ error: { message: err.message } });
+    }
+  }
+
+  @Post('/refresh-token')
+  @ApiDescription(OPERATION_TYPE.LOG_IN)
+  async refreshToken(@Body() { refreshToken }: RefreshTokenDto) {
+    try {
+     return await this.authService.getNewToken(refreshToken)
     } catch (err) {
       throw new BadRequestException({ error: { message: err.message } });
     }

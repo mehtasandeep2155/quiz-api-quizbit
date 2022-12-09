@@ -2,35 +2,27 @@ import {
   Controller,
   Post,
   Body,
-  HttpCode,
-  HttpStatus,
   BadRequestException,
   Response
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import { ApiDescription } from 'src/decorators/api-description.decorator';
 import {
-  ApiInternalServerErrorResponse,
-  ApiNotFoundResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags
-} from '@nestjs/swagger';
-import { API_TAG, AUTH, OPERATION_TYPE, RESPONSE_MESSAGE } from 'src/utilities/enums';
+  API_TAG,
+  AUTH,
+  CONTROLLER_DEF,
+  OPERATION_TYPE
+} from 'src/utilities/enums';
 import { AdminAuthService } from './admin-auth.service';
 import { AdminAuthDto } from './dto/admin-auth-dto';
 
-@Controller('admin-auth')
+@Controller(CONTROLLER_DEF.ADMIN_AUTH)
 @ApiTags(API_TAG.ADMIN_AUTH)
 export class AdminAuthController {
   constructor(private readonly adminAuthService: AdminAuthService) {}
 
   @Post('/login')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ description: OPERATION_TYPE.ADMIN_LOG_IN })
-  @ApiOkResponse({ description: RESPONSE_MESSAGE.SUCCESS })
-  @ApiNotFoundResponse({ description: RESPONSE_MESSAGE.NOT_FOUND })
-  @ApiInternalServerErrorResponse({
-    description: RESPONSE_MESSAGE.SERVER_ERROR
-  })
+  @ApiDescription(OPERATION_TYPE.ADMIN_LOG_IN)
   async login(@Body() { email, password }: AdminAuthDto, @Response() res) {
     try {
       const { token } = await this.adminAuthService.login(email, password);

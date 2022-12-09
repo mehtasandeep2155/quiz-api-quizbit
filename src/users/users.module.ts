@@ -8,6 +8,7 @@ import { UsersController } from './users.controller';
 import { User, UserSchema } from './entities/user.entity';
 import { QuizzesModule } from 'src/quizzes/quizzes.module';
 import { UserPerformanceModule } from 'src/user-performance/user-performance.module';
+import { tokenSecret } from 'src/config';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { UserPerformanceModule } from 'src/user-performance/user-performance.mod
     JwtModule.registerAsync({
       imports:[ConfigModule],
      useFactory:async () => ({
-      secret:`${process.env.JWT_KEY}`
+      secret:tokenSecret()
      }),
      inject:[ConfigService]
     })
